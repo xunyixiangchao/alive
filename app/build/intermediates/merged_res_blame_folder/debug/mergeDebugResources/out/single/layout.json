@@ -1,0 +1,46 @@
+[
+    {
+        "merged": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-mergeDebugResources-76:\\layout\\item_task.xml",
+        "source": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-main-79:\\layout\\item_task.xml"
+    },
+    {
+        "merged": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-mergeDebugResources-76:\\layout\\activity_main.xml",
+        "source": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-main-79:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-mergeDebugResources-76:\\layout\\fragment4.xml",
+        "source": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-main-79:\\layout\\fragment4.xml"
+    },
+    {
+        "merged": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-mergeDebugResources-76:\\layout\\fragment_task_list.xml",
+        "source": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-main-79:\\layout\\fragment_task_list.xml"
+    },
+    {
+        "merged": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-mergeDebugResources-76:\\layout\\fragment2.xml",
+        "source": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-main-79:\\layout\\fragment2.xml"
+    },
+    {
+        "merged": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-mergeDebugResources-76:\\layout\\fragment3.xml",
+        "source": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-main-79:\\layout\\fragment3.xml"
+    },
+    {
+        "merged": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-mergeDebugResources-76:\\layout\\fragment_home.xml",
+        "source": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-main-79:\\layout\\fragment_home.xml"
+    },
+    {
+        "merged": "com.example.alive.app-mergeDebugResources-76:/layout/activity_main.xml",
+        "source": "com.example.alive.app-main-79:/layout/activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-mergeDebugResources-76:\\layout\\item_frame.xml",
+        "source": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-main-79:\\layout\\item_frame.xml"
+    },
+    {
+        "merged": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-mergeDebugResources-76:\\layout\\fragment1.xml",
+        "source": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-main-79:\\layout\\fragment1.xml"
+    },
+    {
+        "merged": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-mergeDebugResources-76:\\layout\\fragment5.xml",
+        "source": "C:\\Users\\xunyi\\.gradle\\daemon\\8.11.1\\com.example.alive.app-main-79:\\layout\\fragment5.xml"
+    }
+]

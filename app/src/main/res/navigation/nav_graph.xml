@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/fragment_home">
+
+    <!-- Home Fragment -->
+    <fragment
+        android:id="@+id/fragment_home"
+        android:name="com.example.alive.ui.fragment.HomeFragment"
+        android:label="Home">
+        <action
+            android:id="@+id/action_home_to_fragment1"
+            app:destination="@id/fragment1" />
+        <action
+            android:id="@+id/action_home_to_task_list"
+            app:destination="@id/fragment_task_list" />
+    </fragment>
+
+    <!-- Fragment1 - Image Selection -->
+    <fragment
+        android:id="@+id/fragment1"
+        android:name="com.example.alive.ui.fragment.Fragment1"
+        android:label="Select Image">
+        <action
+            android:id="@+id/action_fragment1_to_fragment2"
+            app:destination="@id/fragment2" />
+        <action
+            android:id="@+id/action_fragment1_to_home"
+            app:destination="@id/fragment_home" />
+    </fragment>
+
+    <!-- Fragment2 - Extract 8 Frames -->
+    <fragment
+        android:id="@+id/fragment2"
+        android:name="com.example.alive.ui.fragment.Fragment2"
+        android:label="Extract Frames">
+        <action
+            android:id="@+id/action_fragment2_to_fragment3"
+            app:destination="@id/fragment3" />
+        <action
+            android:id="@+id/action_fragment2_to_fragment1"
+            app:destination="@id/fragment1" />
+    </fragment>
+
+    <!-- Fragment3 - Circle Selection -->
+    <fragment
+        android:id="@+id/fragment3"
+        android:name="com.example.alive.ui.fragment.Fragment3"
+        android:label="Circle Selection">
+        <action
+            android:id="@+id/action_fragment3_to_fragment4"
+            app:destination="@id/fragment4" />
+        <action
+            android:id="@+id/action_fragment3_to_fragment2"
+            app:destination="@id/fragment2" />
+    </fragment>
+
+    <!-- Fragment4 - Task Waiting -->
+    <fragment
+        android:id="@+id/fragment4"
+        android:name="com.example.alive.ui.fragment.Fragment4"
+        android:label="Processing">
+        <action
+            android:id="@+id/action_fragment4_to_fragment5"
+            app:destination="@id/fragment5" />
+        <action
+            android:id="@+id/action_fragment4_to_home"
+            app:destination="@id/fragment_home" />
+    </fragment>
+
+    <!-- Fragment5 - Result Display -->
+    <fragment
+        android:id="@+id/fragment5"
+        android:name="com.example.alive.ui.fragment.Fragment5"
+        android:label="Result">
+        <action
+            android:id="@+id/action_fragment5_to_home"
+            app:destination="@id/fragment_home" />
+        <action
+            android:id="@+id/action_fragment5_to_task_list"
+            app:destination="@id/fragment_task_list" />
+    </fragment>
+
+    <!-- Task List -->
+    <fragment
+        android:id="@+id/fragment_task_list"
+        android:name="com.example.alive.ui.fragment.TaskListFragment"
+        android:label="Task List">
+        <action
+            android:id="@+id/action_task_list_to_home"
+            app:destination="@id/fragment_home" />
+        <action
+            android:id="@+id/action_task_list_to_fragment5"
+            app:destination="@id/fragment5" />
+    </fragment>
+
+</navigation>
