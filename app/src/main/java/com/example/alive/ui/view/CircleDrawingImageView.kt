@@ -55,6 +55,12 @@ class CircleDrawingImageView @JvmOverloads constructor(
     private var startY = 0f
 
     /**
+     * 圆圈完成时的回调函数
+     * 当用户完成绘制一个圆圈时调用
+     */
+    private var onCircleCompleted: (() -> Unit)? = null
+
+    /**
      * 圆圈绘制的Paint对象
      * - 颜色：红色
      * - 线宽：3px
@@ -105,6 +111,8 @@ class CircleDrawingImageView @JvmOverloads constructor(
                 if (circle != null && circle.radius > 10f) {
                     // 半径大于10像素时保存圆圈
                     completedCircles.add(circle)
+                    // 触发圆圈完成回调
+                    onCircleCompleted?.invoke()
                 }
 
                 // 清除当前绘制的圆圈
@@ -179,4 +187,35 @@ class CircleDrawingImageView @JvmOverloads constructor(
      * 检查是否有圆圈
      */
     fun hasCircles(): Boolean = completedCircles.isNotEmpty()
+
+    /**
+     * 从历史中恢复圆圈列表（用于撤销/前进导航）
+     * 当用户执行撤销或前进操作时，调用此方法更新显示的圆圈
+     *
+     * @param circles 新的圆圈列表
+     */
+    fun setCircles(circles: List<CircleSelection>) {
+        completedCircles.clear()
+        completedCircles.addAll(circles)
+        invalidate()
+    }
+
+    /**
+     * 获取当前完成的圆圈数量（用于 UI 显示，例如 "第 2/8 圈"）
+     *
+     * @return 已完成的圆圈数
+     */
+    fun getCircleCount(): Int = completedCircles.size
+
+    /**
+     * 设置圆圈完成时的回调函数
+     *
+     * 当用户完成绘制一个新圆圈时，此回调会被调用
+     * 可用于更新 UI 状态或将新圈选帧添加到历史管理器
+     *
+     * @param callback 回调函数，当圆圈完成时触发
+     */
+    fun setOnCircleCompletedListener(callback: () -> Unit) {
+        onCircleCompleted = callback
+    }
 }

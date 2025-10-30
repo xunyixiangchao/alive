@@ -6,8 +6,10 @@ import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.viewbinding.ViewBinding
 import com.example.alive.databinding.Fragment3Binding
+import com.example.alive.data.entity.CircleSelection
 import com.example.alive.ui.adapter.FrameAdapter
 import com.example.alive.ui.viewmodel.Fragment3ViewModel
+import com.example.alive.util.FrameHistoryManager
 
 /**
  * Fragment3 - 圈选人物界面
@@ -34,6 +36,12 @@ class Fragment3 : BaseFragment<Fragment3Binding, Fragment3ViewModel>() {
      * RecyclerView适配器，显示参考的8帧
      */
     private lateinit var frameAdapter: FrameAdapter
+
+    /**
+     * 圈选历史管理器，支持撤销/前进导航
+     * 跟踪用户每次圈选的状态，支持返回前一帧或后一帧
+     */
+    private var frameHistoryManager: FrameHistoryManager<List<CircleSelection>>? = null
 
     /**
      * 创建ViewBinding实例
@@ -81,6 +89,50 @@ class Fragment3 : BaseFragment<Fragment3Binding, Fragment3ViewModel>() {
             adapter = frameAdapter
         }
 
+        // 初始化圈选历史管理器
+        // 初始帧为空列表（用户还未绘制圆圈）
+        frameHistoryManager = FrameHistoryManager<List<CircleSelection>>(emptyList())
+
+        // 设置CircleDrawingImageView的圆圈完成回调
+        // 每当用户完成绘制一个新圆圈时，将其添加到历史
+        binding.circleDrawingImageView.setOnCircleCompletedListener {
+            addFrameToHistory()
+        }
+
+        // 设置"撤销"按钮的点击事件
+        binding.btnRemoveCircle.setOnClickListener {
+            frameHistoryManager?.let { manager ->
+                val previousFrame = manager.undo()
+                if (previousFrame != null) {
+                    // 更新CircleDrawingImageView中显示的圆圈
+                    binding.circleDrawingImageView.setCircles(previousFrame)
+                    // 更新按钮启用状态
+                    updateHistoryButtonStates()
+                }
+            }
+        }
+
+        // 设置"前进"按钮的点击事件
+        binding.btnForward.setOnClickListener {
+            frameHistoryManager?.let { manager ->
+                val nextFrame = manager.forward()
+                if (nextFrame != null) {
+                    // 更新CircleDrawingImageView中显示的圆圈
+                    binding.circleDrawingImageView.setCircles(nextFrame)
+                    // 更新按钮启用状态
+                    updateHistoryButtonStates()
+                }
+            }
+        }
+
+        // 设置"清空"按钮的点击事件
+        binding.btnClearAll.setOnClickListener {
+            binding.circleDrawingImageView.clearAllCircles()
+            // 重置历史管理器
+            frameHistoryManager?.reset(emptyList())
+            updateHistoryButtonStates()
+        }
+
         // 设置"提交"按钮的点击事件
         binding.btnSubmit.setOnClickListener {
             // 从CircleDrawingImageView获取用户绘制的圆圈数据
@@ -112,6 +164,38 @@ class Fragment3 : BaseFragment<Fragment3Binding, Fragment3ViewModel>() {
         if (!extractedFrames.isNullOrEmpty()) {
             frameAdapter.updateFrames(extractedFrames)
         }
+
+        // 初始更新按钮状态（撤销/前进按钮禁用）
+        updateHistoryButtonStates()
+    }
+
+    /**
+     * 更新撤销/前进按钮的启用状态
+     *
+     * 根据历史管理器的当前位置：
+     * - 第一帧时，撤销按钮禁用
+     * - 最后一帧时，前进按钮禁用
+     * - 中间帧时，两个按钮都启用
+     */
+    private fun updateHistoryButtonStates() {
+        frameHistoryManager?.let { manager ->
+            binding.btnRemoveCircle.isEnabled = manager.canUndo()
+            binding.btnForward.isEnabled = manager.canForward()
+        }
+    }
+
+    /**
+     * 添加新圈选帧到历史
+     *
+     * 当用户完成一个新的圆圈绘制时调用此方法：
+     * 1. 获取当前显示的所有圆圈
+     * 2. 将其作为新帧添加到历史
+     * 3. 更新按钮启用状态
+     */
+    private fun addFrameToHistory() {
+        val currentCircles = binding.circleDrawingImageView.getCircles()
+        frameHistoryManager?.push(currentCircles)
+        updateHistoryButtonStates()
     }
 
     /**

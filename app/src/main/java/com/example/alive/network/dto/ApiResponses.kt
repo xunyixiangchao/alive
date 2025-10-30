@@ -62,3 +62,29 @@ data class ErrorResponse(
     val code: Int,
     val message: String
 )
+
+/**
+ * UploadUrlResponse - 获取上传地址的API响应
+ *
+ * @param uploadUrl 用于上传图片的临时URL地址
+ * @param expiresIn 上传地址的有效期（秒）
+ */
+@Serializable
+data class UploadUrlResponse(
+    val uploadUrl: String,
+    val expiresIn: Int = 3600
+)
+
+/**
+ * ImageUploadResponse - 上传图片的API响应
+ *
+ * @param success 上传是否成功
+ * @param imageUrl 上传成功后的图片URL（可用于后续处理）
+ * @param message 响应消息
+ */
+@Serializable
+data class ImageUploadResponse(
+    val success: Boolean,
+    val imageUrl: String,
+    val message: String? = null
+)

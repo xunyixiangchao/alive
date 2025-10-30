@@ -3,11 +3,15 @@ package com.example.alive.network.api
 import com.example.alive.network.dto.CircleRemovalResponse
 import com.example.alive.network.dto.FavoriteResponse
 import com.example.alive.network.dto.TaskStatusResponse
+import com.example.alive.network.dto.UploadUrlResponse
+import com.example.alive.network.dto.ImageUploadResponse
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
+import retrofit2.http.Body
+import okhttp3.MultipartBody
 
 /**
  * AliveApi - REST API接口定义
@@ -79,4 +83,29 @@ interface AliveApi {
         @Field("taskId") taskId: Long,
         @Field("isFavorite") isFavorite: Boolean
     ): FavoriteResponse
+
+    /**
+     * 获取图片上传地址
+     *
+     * Fragment1在用户选择图片后调用此接口获取上传地址
+     * 服务器返回一个临时的上传URL供后续上传使用
+     *
+     * @return UploadUrlResponse，包含上传地址
+     */
+    @GET("/api/upload/get-url")
+    suspend fun getUploadUrl(): UploadUrlResponse
+
+    /**
+     * 上传图片到服务器
+     *
+     * Fragment1在获取上传地址后调用此接口上传实际的图片文件
+     * 使用multipart/form-data格式上传二进制文件
+     *
+     * @param body 包含图片文件的MultipartBody
+     * @return ImageUploadResponse，包含上传结果和图片地址
+     */
+    @POST("/api/upload/image")
+    suspend fun uploadImage(
+        @Body body: MultipartBody
+    ): ImageUploadResponse
 }

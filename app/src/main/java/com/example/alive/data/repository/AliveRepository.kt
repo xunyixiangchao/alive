@@ -9,7 +9,10 @@ import com.example.alive.network.api.AliveApi
 import com.example.alive.network.api.ApiClient
 import com.example.alive.network.dto.FavoriteResponse
 import com.example.alive.network.dto.TaskStatusResponse
+import com.example.alive.network.dto.UploadUrlResponse
+import com.example.alive.network.dto.ImageUploadResponse
 import kotlinx.coroutines.flow.Flow
+import okhttp3.MultipartBody
 
 /**
  * AliveRepository - 数据仓库，单一的数据访问入口
@@ -253,5 +256,32 @@ class AliveRepository(
         // 同时更新本地数据库
         updateTaskFavorite(taskId, response.isFavorite == 1)
         return response
+    }
+
+    // ==================== 图片上传操作 ====================
+
+    /**
+     * 获取图片上传地址
+     *
+     * 调用API获取临时的上传URL
+     * Fragment1在用户选择图片后调用
+     *
+     * @return UploadUrlResponse，包含上传地址和有效期
+     */
+    suspend fun getUploadUrl(): UploadUrlResponse {
+        return api.getUploadUrl()
+    }
+
+    /**
+     * 上传图片到服务器
+     *
+     * 使用获取的上传地址上传实际的图片文件
+     * 支持多种图片格式和大小
+     *
+     * @param imageBody 包含图片文件的MultipartBody
+     * @return ImageUploadResponse，包含上传结果和图片URL
+     */
+    suspend fun uploadImage(imageBody: MultipartBody): ImageUploadResponse {
+        return api.uploadImage(imageBody)
     }
 }

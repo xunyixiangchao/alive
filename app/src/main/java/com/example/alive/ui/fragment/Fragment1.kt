@@ -19,17 +19,23 @@ import com.example.alive.ui.viewmodel.Fragment1ViewModel
  * 职责：
  * - 提供图片/视频选择界面
  * - 用户通过点击按钮调起系统选择器选择ALIVE图片或视频
- * - 将选中的图片/视频信息保存到数据库
- * - 更新SharedViewModel中的currentImage，为后续流程提供数据
+ * - 本地提取选中视频的8帧（不需要API）
+ * - 获取图片上传地址
+ * - 上传图片到服务器
+ * - 将选中的图片信息保存到数据库
  * - 显示加载状态和错误提示
  *
- * 用户交互流程：
- * 1. 点击 "Select Image" 按钮
+ * 完整的工作流程：
+ * 1. 点击"选择图片"按钮
  * 2. 系统文件选择器打开
- * 3. 选择图片/视频文件
- * 4. 文件路径被保存到数据库
- * 5. UI显示已选择的文件信息
- * 6. 自动跳转到Fragment2（8帧提取）
+ * 3. 用户选择图片/视频
+ * 4. 自动执行完整流程：
+ *    - 保存图片到数据库
+ *    - 本地提取8帧
+ *    - 获取上传地址
+ *    - 上传图片到服务器
+ * 5. UI显示进度和完成状态
+ * 6. 上传成功后跳转到Fragment2
  */
 class Fragment1 : BaseFragment<Fragment1Binding, Fragment1ViewModel>() {
 
@@ -55,8 +61,8 @@ class Fragment1 : BaseFragment<Fragment1Binding, Fragment1ViewModel>() {
                 timestamp = System.currentTimeMillis()
             )
 
-            // 调用ViewModel保存到数据库
-            viewModel.saveSelectedImage(aliveImage)
+            // 调用ViewModel执行完整流程：保存 → 抽帧 → 获取上传地址 → 上传
+            viewModel.executeCompleteWorkflow(aliveImage, requireContext())
         } else {
             // 用户取消了选择
             Toast.makeText(requireContext(), "No image selected", Toast.LENGTH_SHORT).show()
@@ -99,22 +105,27 @@ class Fragment1 : BaseFragment<Fragment1Binding, Fragment1ViewModel>() {
 
         // 设置"下一步"按钮的点击事件
         binding.btnNext.setOnClickListener {
-            // 检查是否已选择了图片
-            val selectedImage = viewModel.selectedImage.value
-            if (selectedImage != null) {
-                // 将选中的图片保存到SharedViewModel
-                sharedViewModel.setCurrentImage(selectedImage)
+            // 检查是否已成功上传了图片
+            val uploadedUrl = viewModel.uploadedImageUrl.value
+            if (!uploadedUrl.isNullOrEmpty()) {
+                // 将选中的图片和提取的帧保存到SharedViewModel
+                viewModel.selectedImage.value?.let { image ->
+                    sharedViewModel.setCurrentImage(image)
+                }
+                viewModel.extractedFrames.value?.let { frames ->
+                    sharedViewModel.setExtractedFrames(frames)
+                }
 
-                // 导航到Fragment2（8帧提取）
-                // 使用Navigation组件的navController进行导航
+                // 导航到Fragment2（原来的8帧提取已在Fragment1完成）
+                // 或可选择直接进入Fragment3（圈选）
                 findNavController().navigate(
                     FragmentDirections.actionFragment1ToFragment2()
                 )
             } else {
-                // 提示用户需要先选择图片
+                // 提示用户需要先完成上传
                 Toast.makeText(
                     requireContext(),
-                    "Please select an image first",
+                    "Please select and upload an image first",
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -133,9 +144,14 @@ class Fragment1 : BaseFragment<Fragment1Binding, Fragment1ViewModel>() {
      * 根据数据变化更新UI或执行其他操作
      *
      * 观察的数据包括：
-     * 1. selectedImage - 当前选中的图片，用于显示选择结果
-     * 2. isLoading - 加载状态，用于显示/隐藏进度条
-     * 3. errorMessage - 错误消息，用于显示错误提示
+     * 1. selectedImage - 当前选中的图片
+     * 2. extractedFrames - 本地提取的8帧
+     * 3. uploadUrl - 获取到的上传地址
+     * 4. uploadedImageUrl - 上传后的图片URL
+     * 5. currentWorkflowStep - 当前工作流程步骤
+     * 6. workflowStepDescription - 步骤描述
+     * 7. isLoading - 加载状态
+     * 8. errorMessage - 错误消息
      */
     override fun observeViewModel() {
         // 观察选中的图片数据
@@ -147,18 +163,87 @@ class Fragment1 : BaseFragment<Fragment1Binding, Fragment1ViewModel>() {
             }
         }
 
+        // 观察提取的帧数据
+        viewModel.extractedFrames.observe(viewLifecycleOwner) { frames ->
+            if (frames.isNotEmpty()) {
+                // 显示已提取帧的数量
+                binding.tvStatus.text = "✓ Step 2: Extracted ${frames.size} frames locally"
+                binding.tvStatus.visibility = View.VISIBLE
+            }
+        }
+
+        // 观察上传地址
+        viewModel.uploadUrl.observe(viewLifecycleOwner) { url ->
+            if (url.isNotEmpty()) {
+                // 显示已获取上传地址
+                binding.tvStatus.text = "✓ Step 3: Got upload URL"
+                binding.tvStatus.visibility = View.VISIBLE
+            }
+        }
+
+        // 观察上传后的图片URL
+        viewModel.uploadedImageUrl.observe(viewLifecycleOwner) { url ->
+            if (url.isNotEmpty()) {
+                // 显示上传成功
+                binding.tvStatus.text = "✓ Step 4: Image uploaded successfully"
+                binding.tvStatus.visibility = View.VISIBLE
+                // 启用"下一步"按钮
+                binding.btnNext.isEnabled = true
+            }
+        }
+
+        // 观察工作流程步骤（详细进度显示）
+        viewModel.currentWorkflowStep.observe(viewLifecycleOwner) { step ->
+            when (step) {
+                0 -> {
+                    // 未开始或错误后重置
+                    binding.tvProgressStep.text = ""
+                    binding.tvProgressStep.visibility = View.GONE
+                }
+                1 -> {
+                    binding.tvProgressStep.text = "▶ Step 1/4: Saving image to database..."
+                    binding.tvProgressStep.visibility = View.VISIBLE
+                }
+                2 -> {
+                    binding.tvProgressStep.text = "▶ Step 2/4: Extracting frames locally..."
+                    binding.tvProgressStep.visibility = View.VISIBLE
+                }
+                3 -> {
+                    binding.tvProgressStep.text = "▶ Step 3/4: Getting upload URL..."
+                    binding.tvProgressStep.visibility = View.VISIBLE
+                }
+                4 -> {
+                    binding.tvProgressStep.text = "▶ Step 4/4: Uploading image..."
+                    binding.tvProgressStep.visibility = View.VISIBLE
+                }
+                5 -> {
+                    binding.tvProgressStep.text = "✓ All steps completed!"
+                    binding.tvProgressStep.visibility = View.VISIBLE
+                }
+            }
+        }
+
+        // 观察步骤描述
+        viewModel.workflowStepDescription.observe(viewLifecycleOwner) { description ->
+            if (description.isNotEmpty()) {
+                // 也可以在tvStatus中显示详细描述
+                // binding.tvStatus.text = description
+            }
+        }
+
         // 观察加载状态（从BaseViewModel继承）
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
             if (isLoading) {
-                // 显示进度条
+                // 显示进度条和处理中提示
                 binding.progressBar.visibility = View.VISIBLE
+                binding.tvStatus.text = "Processing..."
+                binding.tvStatus.visibility = View.VISIBLE
                 binding.btnSelectImage.isEnabled = false
                 binding.btnNext.isEnabled = false
             } else {
                 // 隐藏进度条
                 binding.progressBar.visibility = View.GONE
                 binding.btnSelectImage.isEnabled = true
-                binding.btnNext.isEnabled = true
             }
         }
 
@@ -166,7 +251,15 @@ class Fragment1 : BaseFragment<Fragment1Binding, Fragment1ViewModel>() {
         viewModel.errorMessage.observe(viewLifecycleOwner) { errorMsg ->
             if (errorMsg != null) {
                 // 显示错误提示
-                Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_SHORT).show()
+                binding.tvStatus.text = "✗ $errorMsg"
+                binding.tvStatus.visibility = View.VISIBLE
+                binding.tvProgressStep.visibility = View.GONE  // 隐藏进度步骤
+                Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_LONG).show()
+
+                // 提供重试选项（可选）
+                // 用户可以点击"选择图片"按钮重新开始
+                // 或提供一个"重试"按钮
+
                 // 清除错误消息
                 viewModel.clearError()
             }
