@@ -89,9 +89,15 @@ class Fragment3 : BaseFragment<Fragment3Binding, Fragment3ViewModel>() {
             adapter = frameAdapter
         }
 
-        // 初始化圈选历史管理器
-        // 初始帧为空列表（用户还未绘制圆圈）
-        frameHistoryManager = FrameHistoryManager<List<CircleSelection>>(emptyList())
+        // 初始化國選歷史管理器
+        // 支持多张图片，每张图片独立的历史栈
+        frameHistoryManager = FrameHistoryManager<List<CircleSelection>>()
+
+        // 获取当前选中的图片，并初始化第一张图片的历史
+        val currentImage = sharedViewModel.currentImage.value
+        if (currentImage != null) {
+            frameHistoryManager?.newImage(currentImage.id.toString(), emptyList())
+        }
 
         // 设置CircleDrawingImageView的圆圈完成回调
         // 每当用户完成绘制一个新圆圈时，将其添加到历史
@@ -102,12 +108,42 @@ class Fragment3 : BaseFragment<Fragment3Binding, Fragment3ViewModel>() {
         // 设置"撤销"按钮的点击事件
         binding.btnRemoveCircle.setOnClickListener {
             frameHistoryManager?.let { manager ->
-                val previousFrame = manager.undo()
-                if (previousFrame != null) {
-                    // 更新CircleDrawingImageView中显示的圆圈
-                    binding.circleDrawingImageView.setCircles(previousFrame)
-                    // 更新按钮启用状态
-                    updateHistoryButtonStates()
+                val undoResult = manager.undo()
+                when (undoResult) {
+                    is FrameHistoryManager.UndoResult.Success -> {
+                        // 成功撤销到前一帧，更新显示
+                        binding.circleDrawingImageView.setCircles(undoResult.frame)
+                        updateHistoryButtonStates()
+                    }
+                    is FrameHistoryManager.UndoResult.ReachedInitialFrame -> {
+                        // 已撤销到初始状态，显示初始图片
+                        binding.circleDrawingImageView.setCircles(undoResult.frame)
+                        updateHistoryButtonStates()
+                        // 此时用户可以选择另一张图片
+                        Toast.makeText(
+                            requireContext(),
+                            "已回到初始状态，可以选择其他图片",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    is FrameHistoryManager.UndoResult.SwitchToPreviousImage -> {
+                        // 从当前图切换到前一张图
+                        binding.circleDrawingImageView.setCircles(undoResult.frame)
+                        updateHistoryButtonStates()
+                        Toast.makeText(
+                            requireContext(),
+                            "切换到前一张图片",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    is FrameHistoryManager.UndoResult.CantUndo -> {
+                        // 无法撤销
+                        Toast.makeText(
+                            requireContext(),
+                            undoResult.reason,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
         }
@@ -128,8 +164,8 @@ class Fragment3 : BaseFragment<Fragment3Binding, Fragment3ViewModel>() {
         // 设置"清空"按钮的点击事件
         binding.btnClearAll.setOnClickListener {
             binding.circleDrawingImageView.clearAllCircles()
-            // 重置历史管理器
-            frameHistoryManager?.reset(emptyList())
+            // 清除当前图片的所有圈选，回到初始状态
+            frameHistoryManager?.clearCurrentImage()
             updateHistoryButtonStates()
         }
 
